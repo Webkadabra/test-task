@@ -2,12 +2,12 @@
 
 namespace app\controllers;
 
-use Yii;
 use app\models\Menu;
-use yii\data\ActiveDataProvider;
+use Yii;
+use yii\data\ArrayDataProvider;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * MenuController implements the CRUD actions for Menu model.
@@ -35,10 +35,9 @@ class MenuController extends Controller
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => Menu::find(),
+        $dataProvider = new ArrayDataProvider([
+            'models' => Menu::getTree(),
         ]);
-
         return $this->render('index', [
             'dataProvider' => $dataProvider,
         ]);
@@ -62,12 +61,15 @@ class MenuController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
+    public function actionCreate($parent_id = null)
     {
         $model = new Menu();
-
+        if ($parent_id) {
+            $model->parent_id = $parent_id;
+        }
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            Yii::$app->session->addFlash('success', 'Item added');
+            return $this->redirect(['index', 'id' => $model->id]);
         }
 
         return $this->render('create', [
